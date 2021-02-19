@@ -1,5 +1,7 @@
-package javax0.refi.tools.syntax;
+package javax0.selector.tools;
 
+import javax0.selector.tools.Lexeme;
+import javax0.selector.tools.Lexer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,25 +29,13 @@ public class TestLexer {
     private void testSym(Lexer lexer, String s) {
         final var lexeme = lexer.get();
         Assertions.assertEquals(lexeme.type, Lexeme.Type.SYMBOL);
-        Assertions.assertEquals(s,lexeme.string);
-    }
-
-    @Test
-    @DisplayName("The lexer returns identifiers that may contain . and ( and ) and , ")
-    void testIdentifiers() {
-        final var lexer = new Lexer("identif module.java me.thod(vara , varb)");
-        testWord(lexer, "identif");
-        final var space = lexer.get();
-        Assertions.assertEquals(Lexeme.Type.SPACE,space.type);
-        testWord(lexer, "module.java");
-        lexer.get();
-        testWord(lexer, "me.thod(vara,varb)");
+        Assertions.assertEquals(s, lexeme.string);
     }
 
     private void testWord(Lexer lexer, String s) {
         final var lexeme = lexer.get();
-        Assertions.assertEquals(lexeme.type, Lexeme.Type.WORD);
-        Assertions.assertEquals(s,lexeme.string);
+        Assertions.assertEquals(Lexeme.Type.WORD, lexeme.type);
+        Assertions.assertEquals(s, lexeme.string);
     }
 
     @Test
@@ -53,8 +43,8 @@ public class TestLexer {
     void testRegex() {
         final var lexer = new Lexer("/\\s*\\/[a-zA-Z]/");
         final var lexeme = lexer.get();
-        Assertions.assertEquals(Lexeme.Type.REGEX,lexeme.type);
-        Assertions.assertEquals("\\s*/[a-zA-Z]",lexeme.string);
+        Assertions.assertEquals(Lexeme.Type.REGEX, lexeme.type);
+        Assertions.assertEquals("\\s*/[a-zA-Z]", lexeme.string);
     }
 
     @Test
@@ -62,14 +52,14 @@ public class TestLexer {
     void testSkipSpace() {
         final var lexer = new Lexer("/\\s*\\/[a-zA-Z]/ a |");
         final var regex = lexer.get();
-        Assertions.assertEquals(Lexeme.Type.REGEX,regex.type);
-        Assertions.assertEquals("\\s*/[a-zA-Z]",regex.string);
+        Assertions.assertEquals(Lexeme.Type.REGEX, regex.type);
+        Assertions.assertEquals("\\s*/[a-zA-Z]", regex.string);
         final var word = lexer.get();
-        Assertions.assertEquals(Lexeme.Type.WORD,word.type);
-        Assertions.assertEquals("a",word.string);
+        Assertions.assertEquals(Lexeme.Type.WORD, word.type);
+        Assertions.assertEquals("a", word.string);
         final var symb = lexer.get();
-        Assertions.assertEquals(Lexeme.Type.SYMBOL,symb.type);
-        Assertions.assertEquals("|",symb.string);
+        Assertions.assertEquals(Lexeme.Type.SYMBOL, symb.type);
+        Assertions.assertEquals("|", symb.string);
 
 
     }

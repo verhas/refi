@@ -1,4 +1,4 @@
-package javax0.refi.tools.reflection;
+package javax0.selector.tools;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -10,7 +10,7 @@ public class MethodTool {
     final protected AtomicInteger argCounter = new AtomicInteger(0);
     protected Method method;
 
-    public static MethodTool with(Method method) {
+    private static MethodTool with(Method method) {
         var it = new MethodTool();
         it.method = method;
         return it;
@@ -20,7 +20,7 @@ public class MethodTool {
         return with(method).signature();
     }
 
-    public String signature() {
+    private String signature() {
         final var types = method.getGenericParameterTypes();
         final var sb = new StringBuilder();
         for (int i = 0; i < types.length; i++) {

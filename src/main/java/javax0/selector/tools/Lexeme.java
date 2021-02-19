@@ -1,4 +1,4 @@
-package javax0.refi.tools.syntax;
+package javax0.selector.tools;
 
 public class Lexeme {
     public final String string;

@@ -1,6 +1,6 @@
-package javax0.refi.tools.basepackage;
+package javax0.selector.tools.basepackage;
 
-import javax0.refi.tools.basepackage.childpackage.GrandParentClass;
+import javax0.selector.tools.basepackage.childpackage.GrandParentClass;
 
 public class ParentClass extends GrandParentClass {
     private int notInheritedField;

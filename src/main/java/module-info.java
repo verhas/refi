@@ -1,3 +1,3 @@
-module com.javax0.reflection.selector {
-    exports javax0.refi.tools.reflection;
+module javax0.selector {
+    exports javax0.selector;
 }

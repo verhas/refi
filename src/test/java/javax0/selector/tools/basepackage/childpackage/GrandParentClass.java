@@ -1,4 +1,4 @@
-package javax0.refi.tools.basepackage.childpackage;
+package javax0.selector.tools.basepackage.childpackage;
 
 public class GrandParentClass {
     int packagePrivateField;

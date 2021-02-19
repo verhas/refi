@@ -1,7 +1,4 @@
-package javax0.refi.tools.reflection;
-
-import javax0.refi.tools.syntax.Lexeme;
-import javax0.refi.tools.syntax.Lexer;
+package javax0.selector.tools;
 
 import java.util.Arrays;
 
@@ -15,11 +12,11 @@ import java.util.Arrays;
  * <li>REGEX_MATCH ::= registered regex word '~' '/' regular expression '/'</li>
  * </ul>
  */
-class SelectorCompiler {
+public class SelectorCompiler {
 
     private Lexer lexer;
 
-    static SelectorNode compile(String expression) {
+    public static SelectorNode compile(String expression) {
         final var it = new SelectorCompiler();
         it.lexer = new Lexer(expression);
         final var topNode = it.expression();

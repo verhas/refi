@@ -1,4 +1,4 @@
-package javax0.refi.tools.reflection;
+package javax0.selector.tools;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;

@@ -1,7 +1,9 @@
-package javax0.refi.tools.syntax;
+package javax0.selector.tools;
+
+import javax0.selector.Selector;
 
 /**
- * Lexical analyzer used to analyze strings in selector expressions (see {@link javax0.refi.tools.reflection.Selector}.
+ * Lexical analyzer used to analyze strings in selector expressions (see {@link Selector}.
  * <p>
  * The selector expression does not need spaces. If there is a space it is simply terminating the previous lexical
  * element. For example {@code private | public} is just the same as {@code private|public}.

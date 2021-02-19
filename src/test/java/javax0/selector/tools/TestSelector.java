@@ -1,5 +1,6 @@
-package javax0.refi.tools.reflection;
+package javax0.selector.tools;
 
+import javax0.selector.Selector;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -224,7 +225,7 @@ class TestSelector {
     @DisplayName("Class canonical name is matched")
     void testClassCanonicalName() throws NoSuchFieldException {
         final var f = this.getClass();
-        Assertions.assertTrue(Selector.compile("canonicalName ~ /reflection.*?Test/").match(f));
+        Assertions.assertTrue(Selector.compile("canonicalName ~ /tools.*?Test/").match(f));
     }
 
     @Test
