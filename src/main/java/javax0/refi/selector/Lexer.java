@@ -1,9 +1,7 @@
-package javax0.selector.tools;
-
-import javax0.selector.Selector;
+package javax0.refi.selector;
 
 /**
- * Lexical analyzer used to analyze strings in selector expressions (see {@link Selector}.
+ * Lexical analyzer used to analyze strings for the selector expressions (see {@link Selector}.
  * <p>
  * The selector expression does not need spaces. If there is a space it is simply terminating the previous lexical
  * element. For example {@code private | public} is just the same as {@code private|public}.
@@ -26,7 +24,10 @@ public class Lexer {
      * @param input the string containing the expression to be analyzed
      */
     public Lexer(final String input) {
-        this.input = new StringBuilder(input);
+        final String preprocessed;
+
+        preprocessed = input.trim().replaceAll("\\s+", " ");
+        this.input = new StringBuilder(preprocessed);
     }
 
     /**
@@ -59,17 +60,17 @@ public class Lexer {
      * Get the next lexeme from the input and consume it. Consecutive calls to {@code get()} will get the lexemes one
      * after the other.
      *
-     * @return the next lexeme ot the EOF lexeme in case there are no more characters on the input
+     * @return the next lexeme.
      */
     public Lexeme get() {
-        final var ret = peek();
+        final var ret = lookAhead != null ? lookAhead : next();
         lookAhead = next();
         return ret;
     }
 
     /**
      * Get the next lexeme from the input but as opposed to {@link #get()} this method does not consume the lexeme. A
-     * consecutive call to {@code  #peek()} and then to {@link #get()} will return the same lexeme.
+     * consecutive call to {@code  #peek()} or to {@link #get()} will return the same lexeme.
      *
      * @return the next lexeme
      */
@@ -86,80 +87,92 @@ public class Lexer {
      * buffer.
      * <p>
      *
-     * @return the next lexeme from the input or EOF lexeme in case there are no more characters on the input
+     * @return the next lexeme from the input
      */
     private Lexeme next() {
 
-        skipSpaces();
+        if (inputStartsWithSpace()) {
+            deleteSpaceFromTheStartOfInput();
+        }
 
         if (input.length() == 0) {
             return EOF;
         }
 
-        if (isJavaIdentifierStart()) {
+        if (inputStartsWithAnIdentifier()) {
             final var word = new StringBuilder();
-            while (isJavaIdentifierPart()) {
-                word.append(nextChar());
+            boolean inArgs = false;
+            while (input1stCharIsStillPartOfMethodPrototype(inArgs)) {
+                final char c = input.charAt(0);
+                word.append(input.charAt(0));
+                deleteOneCharacter();
+                if ('(' == c) {
+                    inArgs = true;
+                } else if (')' == c) {
+                    break;
+                }
             }
             return new Lexeme(word.toString(), Lexeme.Type.WORD);
         }
 
-        if (isRegexStart()) {
+        if (inputStartsWithRegex()) {
             final var regex = new StringBuilder();
-            step();
-            while (!isRegexEnd()) {
-                if (isEscapedRegexDelimiter()) {
-                    step();
+            deleteOneCharacter();
+            while (regexIsNotFinished()) {
+                if (inputStartsWithEscapedRegexDelimiter()) {
+                    deleteOneCharacter();
                 }
-                regex.append(nextChar());
+                regex.append(input.charAt(0));
+                deleteOneCharacter();
             }
             if (input.length() > 0) {
-                step();
+                deleteOneCharacter();
             } else {
-                throw new IllegalArgumentException("Regular expression is not terminated with closing '/' character.");
+                throw new IllegalArgumentException("Regular expression is not terminated.");
             }
             return new Lexeme(regex.toString(), Lexeme.Type.REGEX);
         }
-        return new Lexeme("" + nextChar(), Lexeme.Type.SYMBOL);
+        var symbol = input.substring(0, 1);
+        deleteOneCharacter();
+        return new Lexeme(symbol, Lexeme.Type.SYMBOL);
     }
 
-    private char nextChar() {
-        char c = input.charAt(0);
-        step();
-        return c;
-    }
-
-    private void step() {
+    private void deleteOneCharacter() {
         input.delete(0, 1);
     }
 
-    private boolean isEscapedRegexDelimiter() {
-        return input.length() > 1 && input.charAt(0) == '\\' && input.charAt(1) == '/';
+    private boolean inputStartsWithEscapedRegexDelimiter() {
+        return input.charAt(0) == '\\' && input.length() > 1 && input.charAt(1) == '/';
     }
 
-    private boolean isRegexEnd() {
-        return input.length() == 0 || input.charAt(0) == '/';
+    private boolean regexIsNotFinished() {
+        return input.length() > 0 && input.charAt(0) != '/';
     }
 
-    private boolean isRegexStart() {
+    private boolean inputStartsWithRegex() {
         return input.length() > 0 && input.charAt(0) == '/';
     }
 
-    private boolean isJavaIdentifierPart() {
-        return input.length() > 0 && Character.isJavaIdentifierPart(input.charAt(0));
+    private boolean input1stCharIsStillPartOfMethodPrototype(boolean inArgs) {
+        return input.length() > 0 &&
+            (Character.isJavaIdentifierPart(input.charAt(0))
+                || '.' == input.charAt(0)
+                || (',' == input.charAt(0) && inArgs)
+                || ('(' == input.charAt(0) && !inArgs)
+                || (')' == input.charAt(0) && inArgs));
     }
 
-    private boolean isJavaIdentifierStart() {
-        return input.length() > 0 && Character.isJavaIdentifierStart(input.charAt(0));
+    private boolean inputStartsWithAnIdentifier() {
+        return Character.isJavaIdentifierStart(input.charAt(0));
     }
 
-    private void skipSpaces() {
-        while (isSpace()) {
-            step();
+    private void deleteSpaceFromTheStartOfInput() {
+        while (inputStartsWithSpace()) {
+            deleteOneCharacter();
         }
     }
 
-    private boolean isSpace() {
+    private boolean inputStartsWithSpace() {
         return input.length() > 0 && Character.isWhitespace(input.charAt(0));
     }
 }

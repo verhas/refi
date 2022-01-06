@@ -1,0 +1,261 @@
+= REFI, Some Reflection Tools
+{%@snip:collect from="src/main/java"%}\
+{%@snip:collect from="src/test/java"%}\
+
+== Member Selector and Filter Expressions
+
+Filter expression is a logical expression.
+It is like a predicate that can be used to test {%@java:class (format=`$name`) java.lang.reflect.Method%},
+{%@java:class (format=`$name`) java.lang.reflect.Field%} or {%@java:class (format=`$name`) java.lang.Class%} objects.
+When the expression is evaluated against a member then the result is either `true` or `false`.
+The expressions are readable strings and before executing have to be compiled.
+
+The Selector class can be used to compile an expression and then to match against a member, like
+
+----
+Selector.compile("... expression ... ").match(myMember)
+----
+
+The result of the match will either be `true` or `false`.
+
+The expression can check that the class, field or method is private, public, abstract, volatile and many other features.
+We will list all the available primitive conditions in this document.
+These primitive conditions can be used together as a logical expression containing logical AND, OR and NOT operators, parentheses and attribute conversions.
+We will talk about attribute conversion a bit later.
+
+For example the filter expression
+
+`public | private`
+
+will be `true` for any field, class or method that is either `private` or `public`.
+It will be `false` for `protected` or package private members.
+
+You can use `|` to express OR relation and `&amp;` to express AND relation.
+For example the filter expression
+
+`public | private &amp; final`
+
+will select the members that are `public` or `private` but the `private` fields also have to be `final` or else they will not be selected.
+(The operator `&amp;` has higher precedence than `|`.)
+
+The expressions can use the `!` character to negate the following part.
+The `(` and `)` can also be used to override the evaluation order.
+
+Sometimes you want to write a condition in part of the expression that is checking not the actual member but something that is related to that member.
+For example, you can write the expression
+
+----
+{%@snip SimpleNameExample /"(.*)"/%}
+----
+
+It will test that the simple name of the return value of the method is either `boolean` or `int` and that the declaring class is not the `Object` class.
+In the first check we explicitly check the `returnType` of the method.
+In this case this is optional, because the simple condition `simpleName` is also defined for methods.
+Methods only have names, but not simple names, therefore `simpleName` is defined for methods to check the simple name of the return type.
+This is a shortcut that can be used to write the expression shorter.
+That way the first part, before the `|` character could also be written without the `returnType` part.
+
+The general advice in cases like this is that you should choose the one that is more readable per your taste, however be consistent.
+The example above is not consistent.
+
+The checking against the actual names in all three cases are regex matchers.
+The `~` character is used to separate the keyword and the regular expression.
+The regular expression is enclosed in `/` characters.
+
+The regular expression is used invoking the {%@java:method (format="`$className.$name()`") java.util.regex.Matcher#find%} method.
+It means that the above example by accident may match a method that has a return type containing the word `boolean` or `int`, for example `Linter`.
+To do an exact match you have to write
+
+[source,text]
+----
+          /^boolean$/
+          /^int$/
+----
+
+
+
+The part `declaringClass -&gt;` following the `&amp;` signals that the next part of the expression should be evaluated not for the object but rather for the declaring class of the object.
+This is an attribute conversion.
+These conversions are on the same precedence level as the `!` negation operator and can be used up to any level.
+For example, you can write
+
+[source, text]
+----
+declaringClass -> superClass -> superClass -> !simpleName ~ /Object/
+----
+
+to check that the method is at least three inheritance level deeper declared than the `Object` class.
+
+=== Format Syntax of Filter Expressions
+
+The formal BNF definition of the selector expressions is the following:
+
+[source, text]
+----
+EXPRESSION ::= EXPRESSION1 ['|' EXPRESSION1 ]+
+EXPRESSION1 ::= EXPRESSION2 ['&' EXPRESSION2] +
+EXPRESSION2 :== TERMINAL | '!' EXPRESSION2 | CONVERSION '->' EXPRESSION2 |'(' EXPRESSION ')'
+TERMINAL ::= TEST | REGEX_MATCHER
+TEST ::= registered word
+CONVERSION ::= registered conversion
+REGEX_MATCHER ::= registered regex word '~' '/' regular expression '/'
+----
+
+Regex matchers can check the names against regular expressions.
+
+The registered words, regex matchers and conversions are numerous, and are documented in the following sections.
+The class `Select` provides a possibility to register your own tests, regex matchers and conversions.
+
+
+=== Annotated Elements Selectors{%@snip:check id=AnnotatedElementsSelectors hash="d2bdcefc"%}
+
+The selectors `annotation` and `annotated` can be used to select any member or class that can be annotated.
+
+`annotation ~ /regex/` is `true` if the examined member has an annotation that matches the regular expression.
+
+`annotated` is `true` if the examined member has any annotation.
+
+=== Class and method checking selectors
+{%@snip:check id=methodAndClassOnlySelectors hash="06d3e4be" message="Check the chapter for documentation change"%}\
+
+These conditions work on classes and on methods.
+{%@snip:check id=illegalArgumentException hash="844dc623" message="Does it still throw the documented exception? Fix the next line!"%}\
+Applying them on a field will throw an {%@java:class (format=`$simpleName`) java.lang.IllegalArgumentException%} exception.
+
+* `abstract` is `true` if the type of method or class is abstract.
+
+* `implements` is `true` if the class implements at least one interface.
+When applied to a method it is `true` if the method implements a method of the same name and argument types in one of the interfaces the class directly or indirectly implements.
+In other words it means that there is an interface that declares this method and this method is an implementation (not abstract).
+
+=== Class checking selectors
+{%@snip:check id=classOnlySelectors hash="de2b3940" message="Check the chapter for documentation change"%}\
+
+These conditions work on classes.
+When used on a field then the type of the field is checked.
+When used on a method then the return type of the method is checked.
+When the documentation here says "… when the type is …" it means that the class or interface itself or the type of the field or the return type of the method if the condition is checked against a field or method.
+
+* `interface` is `true` if the type is an interface
+
+* `primitive` is `true` when the type is a primitive type, a.k.a. `int`, `double`, `char` and so on.
+Note that `String` is not a primitive type.
+
+* `annotation` is `true` if the type is an annotation interface.
+
+* `anonymous` is `true` if the type is anonymous.
+
+* `array` is `true` if the type is an array.
+
+* `enum` is `true` if the type is an enumeration.
+
+* `member` is `true` if the type is a member class, a.k.a. inner or nested class or interface
+
+* `local` is `true` if the type is a local class.
+Local classes are defined inside a method.
+
+* `extends` without any regular expression checks that the class explicitly extends some other class.
+(Implicitly extending `Object` does not count.)
+
+* `extends ~ /regex/` is `true` if the canonical name of the superclass matches the regular expression.
+In other words if the class extends directly the class given in the regular expression.
+
+* `simpleName ~ /regex/` is `true` if the simple name of the class (the name without the package) matches the regular expression.
+
+* `canonicalName ~ /regex/` is `true` if the canonical name of the class matches the regular expression.
+
+[NOTE]
+====
+You may feel that `name` is missing.
+It is not.
+This chapter contains the conditions that work only on classes.
+`name` is a condition that can directly applied to a field or a method without any implicit conversion.
+Fields and methods also have names.
+It also means that you cannot simply check the name of the return type of a method or the type of a field.
+To do that you have to use the explicit conversion `type` or `returnType`.
+====
+
+* `implements ~ /regex/` is `true` if the type directly implements an interface whose name matches the regular expression.
+(Note: `implements` can also be used without a regular expression.
+In that case the checking is different.)
+
+==== Method checking selectors
+
+These conditions work on methods.
+If applied to anything else than a method the checking will throw an exception.
+
+* `synthetic` is `true` if the method is synthetic.
+Synthetic methods are generated by the Javac compiler in some special situation.
+These methods do not appear in the source code.
+
+* `synchronized` is `true` if the method is synchronized.
+
+* `native` is `true` if the method is native.
+
+* `strict` is `true` if the method has the `strict` modifier.
+This is a rarely used modifier and affects the floating point calculation.
+
+* `default` is `true` if the method is defined as a default method in an interface.
+
+* `bridge` is `true` if the method is a bridge method.
+Bridge methods are generated by the Javac compiler in some special situation.
+These methods do not appear in the source code.
+
+* `vararg` is `true` if the method is a variable argument method.
+
+* `overrides` is `true` if the method is overriding another method in the superclass of the method's declaring class or a method in the superclass of the superclass and so on.
+Implementing a method declared in an interface alone will not result `true`, even though methods implementing an interface method are annotated using the compile-time `@Override` annotation.
+The `@Override` annotation may or may not be used on the methid, the result of the flag `overrides` does not depend on the presence of the `@Override` annotation.
+
+* `void` is `true` if the method has no return value.
+
+* `returns ~ /regex/` is `true` if the method return type's canonical name matches the regular expression.
+
+* `throws ~ /regex/` is `true` if the method throws a declared exception that matches the regular expression.
+
+* `signature ~ /regex/` checks that the signature of the method matches the regular expression.
+The signature of the method uses the formal argument names `arg0` ,`arg1`,…,`argN`.
+
+==== Field checking selectors
+
+These conditions work on fields.
+If applied to anything else than a field the checking will throw an exception.
+
+* `transient` is `true` if the field is transient.
+
+* `volatile` is `true` if the field is declared volatile.
+
+=== Conversion
+
+Conversions are used to direct the next part of the expression to check something else instead of the member.
+The conversion is on the same level as the `!` negation operator and the name of the conversion is separated from the following part of the expression by `-&gt;`.
+
+* `declaringClass` check the declaring class instead of the member.
+This can be applied to methods, fields and classes.
+Note that there is an `enclosingClass` that can be applied to classes.
+
+==== Universal selectors
+
+These conditions work on fields, classes and methods.
+
+* `true` is `true` always.
+
+* `false` is `false` always.
+
+* `null` is `true` when the tested something is null.
+This can be used to test when a field, class or method has a parent, enclosing class or something else that we can examine with a `-&gt;` operator.
+
+* `private` is `true` if the examined member has private protection.
+
+* `protected` is `true` if the examined member has protected protection.
+
+* `package` is `true` if the examined member has package private protection.
+
+* `public` is `true` if the examined member is public.
+
+* `static` is `true` if the examined member is static.
+
+* `static` is `true` if the examined member is final.
+
+* `name ~ /regex/` is `true` if the examined member's name matches the regular expression.
+<!-- end snip -->

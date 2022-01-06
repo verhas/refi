@@ -1,8 +1,5 @@
-package javax0.selector;
+package javax0.refi.selector;
 
-import javax0.selector.tools.MethodTool;
-import javax0.selector.tools.SelectorCompiler;
-import javax0.selector.tools.SelectorNode;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
@@ -10,13 +7,17 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -52,6 +53,8 @@ public class Selector<T> {
 
         classOnlySelectors();
 
+
+        // snippet AnnotatedElementsSelectors
         /**
          * - head
          *
@@ -66,6 +69,8 @@ public class Selector<T> {
          */
         selector("annotated", (m) -> only(m, AnnotatedElement.class) &&
             hasAnnotations((AnnotatedElement) m));
+        // end snippet
+
     }
 
     /**
@@ -83,17 +88,54 @@ public class Selector<T> {
          *
          * * `declaringClass` check the declaring class instead of the member.
          * This can be applied to methods, fields and classes.
-         * Note that there is an `enclosingClass` that can be applied to classes.
+         * Note that there is an `enclosingClass` that can be applied to a class.
          */
         converter("declaringClass", this::getDeclaringClass);
-        converter("returnType", m -> only(m, Method.class) ? ((Method) m).getReturnType() : null);
-        converter("type", m -> only(m, Field.class) ? ((Field) m).getType() : null);
-        converter("superClass", m -> only(m, Class.class) ? ((Class<?>) m).getSuperclass() : null);
-        converter("enclosingClass", m -> only(m, Class.class) ? ((Class<?>) m).getEnclosingClass() : null);
-        converter("enclosingMethod", m -> only(m, Class.class) ? ((Class<?>) m).getEnclosingMethod() : null);
-        converter("componentType", m -> only(m, Class.class) ? ((Class<?>) m).getComponentType() : null);
-        converter("nestHost", m -> only(m, Class.class) ? ((Class<?>) m).getNestHost() : null);
+        converter("returnType", m -> method(m, Method::getReturnType));
+        converter("type", m -> field(m, Field::getType));
+        converter("superClass", m -> klass(m, Class::getSuperclass));
+        converter("enclosingClass", m -> klass(m, Class::getEnclosingClass));
+        converter("enclosingMethod", m -> klass(m, Class::getEnclosingMethod));
+        converter("componentType", m -> klass(m, Class::getComponentType));
+        converter("nestHost", m -> klass(m, Class::getNestHost));
     }
+
+    private <Q> Object member(T m, Function<Q, Object> f, Class<Q> klass) {
+        if (only(m, klass)) {
+            return f.apply(klass.cast(m));
+        }
+        return null;
+    }
+
+    private Object method(T m, Function<Method, Object> f) {
+        return member(m, f, Method.class);
+    }
+
+    private boolean methodSelector(T m, Function<Method, Object> f) {
+        return (boolean) Optional.ofNullable(member(m, f, Method.class)).orElse(false);
+    }
+
+    private Method method(T m) {
+        return (Method) m;
+    }
+
+    private Object field(T m, Function<Field, Object> f) {
+        return member(m, f, Field.class);
+    }
+
+    private Field field(T m) {
+        return (Field) m;
+    }
+
+    private Object klass(T m, Function<Class, Object> f) {
+        return member(m, f, Class.class);
+    }
+
+    private Class<?> klass(T m) {
+        return (Class<?>) m;
+    }
+
+    private static final Map<String, Selector<?>> cache = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * Compile a string to the internal structure of the member selector that can later be used to match a member.
@@ -101,21 +143,23 @@ public class Selector<T> {
      * @param expression a logical expression described as a string
      * @return {@code this} object to allow method chaining
      */
-    public static <T> Selector<T> compile(String expression) {
-        final var it = new Selector<T>(expression);
-        it.top = SelectorCompiler.compile(expression);
-        return it;
+    public static Selector<?> compile(String expression) {
+        return cache.computeIfAbsent(expression, e -> {
+            final var it = new Selector(expression);
+            it.top = SelectorCompiler.compile(expression);
+            return it;
+        });
     }
 
     private Class<?> getDeclaringClass(T m) {
         if (m instanceof Class) {
-            return ((Class<?>) m).getDeclaringClass();
+            return klass(m).getDeclaringClass();
         }
         if (m instanceof Method) {
-            return ((Method) m).getDeclaringClass();
+            return method(m).getDeclaringClass();
         }
         if (m instanceof Field) {
-            return ((Field) m).getDeclaringClass();
+            return field(m).getDeclaringClass();
         }
         if (m == null) {
             return null;
@@ -128,10 +172,10 @@ public class Selector<T> {
             return (Class<?>) m;
         }
         if (m instanceof Method) {
-            return ((Method) m).getReturnType();
+            return method(m).getReturnType();
         }
         if (m instanceof Field) {
-            return ((Field) m).getType();
+            return field(m).getType();
         }
         throw illegalArgumentException("Selector cannot be applied to " + (m == null ? "null " : m.getClass()));
     }
@@ -144,24 +188,12 @@ public class Selector<T> {
      * <p> These conditions work on classes and on methods.
      * Applying them on a field will throw exception.
      */
+    //snippet methodAndClassOnlySelectors
     private void methodAndClassOnlySelectors() {
-        /**
-         * -
-         *
-         * * `abstract` is `true` if the type of method is abstract.
-         *
-         */
         selector("abstract", m -> only(m, Class.class, Method.class) && Modifier.isAbstract(getModifiers(m)));
-        /**
-         * -
-         *
-         * * `implements` is `true` if the class implements at least one interface.
-         * When applied to a method it is `true` if the method implements a method of the same name and argument types in one of the interfaces the class directly or indirectly implements.
-         * In other words it means that there is an interface that declares this method and this method is an implementation (not abstract).
-         *
-         */
         selector("implements", m -> only(m, Class.class, Method.class) && methodOrClassImplements(m));
     }
+    //end snippet
 
     private boolean notNull(T m) {
         return m != null;
@@ -177,63 +209,16 @@ public class Selector<T> {
      * it means that the class or interface itself or the type of the field or the return type of the method in case the
      * condition is checked against a field or method.
      */
+    //snippet classOnlySelectors
     private void classOnlySelectors() {
-        /**
-         * -
-         *
-         * * `interface` is `true` if the type is an interface
-         */
         selector("interface", m -> notNull(m) && toClass(m).isInterface());
-        /**
-         * -
-         *
-         * * `primitive` is `true` when the type is a primitive type, a.k.a. `int`, `double`, `char` and so on.
-         * Note that `String` is not a primitive type.
-         */
         selector("primitive", m -> notNull(m) && toClass(m).isPrimitive());
-        /**
-         * -
-         *
-         * * `annotation` is `true` if the type is an annotation interface.
-         */
         selector("annotation", m -> notNull(m) && toClass(m).isAnnotation());
-        /**
-         * -
-         *
-         * * `anonymous` is `true` if the type is anonymous.
-         */
         selector("anonymous", m -> notNull(m) && toClass(m).isAnonymousClass());
-        /**
-         * -
-         *
-         * * `array` is `true` if the type is an array.
-         */
         selector("array", m -> notNull(m) && toClass(m).isArray());
-        /**
-         * -
-         *
-         * * `enum` is `true` if the type is an enumeration.
-         */
         selector("enum", m -> notNull(m) && toClass(m).isEnum());
-        /**
-         * -
-         *
-         * * `member` is `true` if the type is a member class, a.k.a. inner or nested class or interface
-         */
         selector("member", m -> notNull(m) && toClass(m).isMemberClass());
-        /**
-         * -
-         *
-         * * `local` is `true` if the type is a local class. Local classes are defined inside a method.
-         */
         selector("local", m -> notNull(m) && toClass(m).isLocalClass());
-        /**
-         * -
-         *
-         * * `extends` without any regular expression checks that the class explicitly extends some other class.
-         * (Implicitly extending `Object` does not count.)
-         *
-         */
         selector("extends", m -> {
             if (m == null) {
                 return false;
@@ -241,34 +226,12 @@ public class Selector<T> {
             final var superClass = toClass(m).getSuperclass();
             return superClass != null && !"java.lang.Object".equals((superClass.getCanonicalName()));
         });
-        /**
-         * -
-         *
-         * * `extends ~ /regex/` is `true` if the canonical name of the superclass matches the regular expression.
-         * In other words if the class extends directly the class given in the regular expression.
-         */
         regexSelector("extends", (m, regex) -> notNull(m) && regex.matcher(toClass(m).getSuperclass().getCanonicalName()).find());
-        /**
-         * -
-         *
-         * * `simpleName ~ /regex/` is `true` if the simple name of the class (the name without the package) matches the regular expression.
-         */
         regexSelector("simpleName", (m, regex) -> notNull(m) && regex.matcher(toClass(m).getSimpleName()).find());
-        /**
-         * -
-         *
-         * * `canonicalName ~ /regex/` is `true` if the canonical name of the class matches the regular expression.
-         */
         regexSelector("canonicalName", (m, regex) -> notNull(m) && regex.matcher(toClass(m).getCanonicalName()).find());
-        /**
-         * -
-         *
-         * * `implements ~ /regex/` is `true` if the type directly implements an interface whose name matches the regular expression.
-         * (Note: `implements` can also be used without a regular expression.
-         * In that case the checking is different.)
-         */
         regexSelector("implements", (m, regex) -> notNull(m) && classImplements(toClass(m), regex));
     }
+    //end snippet
 
     /**
      * -
@@ -320,13 +283,13 @@ public class Selector<T> {
          * Bridge methods are generated by the Javac compiler in some special situation.
          * These methods do not appear in the source code.
          */
-        selector("bridge", m -> only(m, Method.class) && ((Method) m).isBridge());
+        selector("bridge", m -> methodSelector(m, Method::isBridge));
         /**
          * -
          *
          * * `vararg` is `true` if the method is a variable argument method.
          */
-        selector("vararg", m -> only(m, Method.class) && ((Method) m).isVarArgs());
+        selector("vararg", m -> methodSelector(m, Method::isVarArgs));
         /**
          * -
          *
@@ -340,21 +303,21 @@ public class Selector<T> {
          *
          * * `void` is `true` if the method has no return value.
          */
-        selector("void", m -> only(m, Method.class) && ((Method) m).getReturnType().equals(Void.TYPE));
+        selector("void", m -> Void.TYPE.equals(method(m, Method::getReturnType)));
         /**
          * -
          *
          * * `returns ~ /regex/` is `true` if the method return type's canonical name matches the regular expression.
          */
         regexSelector("returns", (m, regex) -> only(m, Method.class) && regex.matcher(
-            ((Method) m).getReturnType().getCanonicalName()).find());
+            method(m).getReturnType().getCanonicalName()).find());
         /**
          * -
          *
          * * `throws ~ /regex/` is `true` if the method throws a declared exception that matches the regular expression.
          */
         regexSelector("throws", (m, regex) -> only(m, Method.class) &&
-            Arrays.stream(((Method) m).getGenericExceptionTypes())
+            Arrays.stream(method(m).getGenericExceptionTypes())
                 .anyMatch(exception -> regex.matcher(exception.getTypeName()).find()));
         /**
          * -
@@ -363,7 +326,7 @@ public class Selector<T> {
          * The signature of the method uses the formal argument names `arg0` ,`arg1`,...,`argN`.
          */
         regexSelector("signature", (m, regex) ->
-            only(m, Method.class) && regex.matcher(MethodTool.methodSignature((Method) m)).find());
+            only(m, Method.class) && regex.matcher(new MethodSignatureFatory().signature(method(m))).find());
     }
 
     /**
@@ -470,7 +433,7 @@ public class Selector<T> {
             return ((Member) m).getName();
         }
         if (m instanceof Class) {
-            return ((Class<?>) m).getName();
+            return klass(m).getName();
         }
         throw illegalArgumentException("Cannot get the name for " + m.getClass().getCanonicalName());
     }
@@ -480,7 +443,7 @@ public class Selector<T> {
             return ((Member) m).getModifiers();
         }
         if (m instanceof Class) {
-            return ((Class<?>) m).getModifiers();
+            return klass(m).getModifiers();
         }
         throw illegalArgumentException("Cannot get the modifiers for " + m.getClass().getCanonicalName());
     }
@@ -613,7 +576,8 @@ public class Selector<T> {
      *
      * @param m       the reflective object to be checked for the listed types
      * @param classes the different types
-     * @return {@code true} if a type is found for {@code m} or throws exception
+     * @return {@code true} if a type is found for {@code m} or throws exception. It returns {@code false} only for
+     * {@code null} argument.
      */
     private boolean only(T m, Class<?>... classes) {
         if (m == null) {
@@ -632,7 +596,7 @@ public class Selector<T> {
      * @param function the function that performs the conversion
      * @return {@code this}
      */
-    public Selector<T> converterRe(String name, Function<T, Object> function) {
+    public Selector converterRe(String name, Function<T, Object> function) {
         converters.put(name, function);
         return this;
     }
@@ -644,7 +608,7 @@ public class Selector<T> {
      * @param function the function that performs the conversion
      * @return {@code this}
      */
-    public Selector<T> converter(String name, Function<T, Object> function) {
+    public Selector converter(String name, Function<T, Object> function) {
         if (converters.containsKey(name)) {
             throw illegalArgumentException("The converter '" + name + "' is already defined, can not be redefined");
         }
@@ -660,7 +624,7 @@ public class Selector<T> {
      * @return {@code this} object to allow method chaining
      */
     @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
-    public Selector<T> selector(String name, Function<T, Boolean> function) {
+    public Selector selector(String name, Function<T, Boolean> function) {
         if (selectors.containsKey(name)) {
             throw illegalArgumentException("The selector '" + name + "' is already defined, can not be redefined");
         }
@@ -677,7 +641,7 @@ public class Selector<T> {
      *                 the string provided in the argument {@code name}
      * @return {@code this} object to allow method chaining
      */
-    public Selector<T> selectorRe(String name, Function<T, Boolean> function) {
+    public Selector selectorRe(String name, Function<T, Boolean> function) {
         selectors.put(name, function);
         return this;
     }
@@ -696,7 +660,7 @@ public class Selector<T> {
      * @return {@code this} object to allow method chaining
      */
     @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
-    public Selector<T> regexSelector(String name, BiFunction<T, Pattern, Boolean> function) {
+    public Selector regexSelector(String name, BiFunction<T, Pattern, Boolean> function) {
         regexMemberSelectors.put(name, function);
         return this;
     }
@@ -711,6 +675,10 @@ public class Selector<T> {
     public boolean match(Object member) {
         //noinspection unchecked
         return match((T) member, top);
+    }
+
+    public Predicate<Object> predicate() {
+        return this::match;
     }
 
     private boolean matchOr(T m, SelectorNode.Or node) {
@@ -785,6 +753,7 @@ public class Selector<T> {
             pattern.matcher(a.annotationType().getCanonicalName()).find());
     }
 
+    // snipline illegalArgumentException
     private IllegalArgumentException illegalArgumentException(final String message) {
         final var exception = new IllegalArgumentException(message + " in expression '" + expression + "'");
         final var elements = exception.getStackTrace();

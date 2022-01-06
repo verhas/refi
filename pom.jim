@@ -1,0 +1,189 @@
+This file defines the macros that can be used to set up a pom.xml.jam file.
+
+This is a file imported and everything that is not a macro, like this text, will be discarded by Jamal, thus it is
+essentially comment.
+
+When this file is imported the macro start and end strings should be the characters U+007B and U+007D as you can see in
+the code below.
+
+In the comment parts the examples are using the [ and the ] characters as macro start and macro end strings.
+
+To import this file the pom.xml.jam file should use the macro
+
+   [@import ../pom.jim]
+
+and this file as a resource should be available on the class path.
+
+------------------------------------------------------------------------------------------------------------------------
+Any tag can be used to start some part of the XML. If there is content then the content will be parsed as XML.
+If there is no content then this macro only starts the XML part and you will need an [end tag] somewhere later.
+
+{@define default($_,...$content)={@if [empty]/$content/<$_>/<$_>$content</$_>}}
+
+------------------------------------------------------------------------------------------------------------------------
+
+Tags that contain a lot of elements inside are supported by macros that start only the tag. These tags have to be closed
+with an [end tag] element. For example
+
+[project name]
+
+  the whole content of the jamalified pom file
+
+[end project]
+
+{@define end($x)=</$x>}
+------------------------------------------------------------------------------------------------------------------------
+You start a project definition with the name and at the end of the file there is an [end project].
+
+{@define project($name)=
+  <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+                 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+      <name>$name</name>}
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+{@define profile($id,...$content)=
+    {@xml:insert (optional path=/project) <profiles></profiles>}
+    {@xml:insert (path=/project/profiles)
+        <profile><id>$id</id>{@if [not empty] |$content</profile>||}
+    }
+}
+{@define snapshotRepository($id,$url)=<snapshotRepository><id>$id</id><url>$url</url></snapshotRepository>}
+{@define repository($id,$url)=<repository><id>$id</id><url>$url</url></repository>}
+
+------------------------------------------------------------------------------------------------------------------------
+
+The GAV macro can be used to define groupId, artifactId and version tags for the project. Each of the elements may be
+missing, it is checked by the macro definitions using the 'if' macro. It is recommended to use : as argument separators
+for this macro in the pom.xml.jam
+
+The macro also defines the user defined macros GROUP_ID, ARTIFACT_ID and VERSION_ID that is used by other macros, like
+parent, when the group id, artifact id or version is not defined. Usually the parent has the same groupId and version
+as a subproject.
+
+To skip the groupId, for example, you can write [GAV ::artifa-ct:1.0.0]
+
+{@define GAV(...$groupId,$artifactId,$version)=
+    {!#if [not empty]|$groupId|{`#xml:insert (path=/project) {groupId $groupId}}}{@define :GROUP_ID=$groupId}
+    {!#if [not empty]|$artifactId|{`#xml:insert (path=/project) {artifactId $artifactId}}}{@define :ARTIFACT_ID=$artifactId}
+    {!#if [not empty]|$version|{`#xml:insert (path=/project) {version $version}}}{@define :VERSION_ID=$version}
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+{@define parent(...$groupId,$artifactId,$version)=
+    {#xml:insert (path=/project)
+        <parent>
+            {groupId {#if [not empty] |$groupId|$groupId|{:GROUP_ID}}}
+            {artifactId {#if [not empty] |$artifactId|$artifactId|{:ARTIFACT_ID}}}
+            {version {#if [not empty] |$version|$version|{:VERSION_ID}}}
+        </parent>
+    }
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+Define a dependency. The arguments are the ... you see. Each of the arguments are
+optional. If one is missing there will be no corresponding XML tag generated.
+
+{@define dependency(...$groupId,$artifactId,$version,$scope,$type)=
+    {@xml:insert (optional path=/project) <dependencies></dependencies>}
+    {#xml:insert (path=/project/dependencies)
+    <dependency>
+        {#if [not empty] |$groupId|{groupId $groupId}}
+        {#if [not empty] |$artifactId|{artifactId $artifactId}}
+        {#if [not empty] |$version|{version $version}}
+        {#if [not empty] |$scope|{scope $scope}}
+        {#if [not empty] |$type|{type $type}}
+    </dependency>}
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+Use this marco to define the modules in a multi module project parent pom.xml.jam. Simply list the names of the modules
+comma separated, like [modules module1,module2,module3]
+
+{@define modules($modules)=
+    {@xml:insert (optional path=/project) <modules></modules>}
+    {!@for [separator=\s*,\s*] $m in ($modules)={@xml:insert (path=/project/modules)<module>$m</module>}}
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+Define a license type with the name and the URL. There is no support in this macro package to specify multiple licenses.
+
+{@define license($name,$url)=
+    {@xml:insert (optional path=/project) <licenses></licenses>}
+    {@xml:insert (path=/project/licenses)<license><name>$name</name><url>$url</url></license>}
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------------
+
+Use this macro to define that the source encoding is whatever it is. Usually UTF8. If there is no argument to the macro
+then the encoding will be UTF-8.
+
+NOTE that this
+
+{@define sourceEncoding($x)=
+    {@xml:insert (optional path=/project) <properties></properties>}
+    {@xml:insert (path=/project/properties)<project.build.sourceEncoding>{#if |$x|$x|UTF-8}</project.build.sourceEncoding>}
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+Use this macro to define properties inside the <properties> ...</properties> tags (for which you should use the
+[properties] macro. Use if this macro you can write
+
+         property(name,value)
+
+or just simply
+
+         prop(name,value)
+
+instead of
+
+         <name>value</name>
+
+
+{@define property($name,$value)=
+    {@xml:insert (optional path=/project) <properties></properties>}
+    {@xml:insert (path=/project/properties)<$name>$value</$name>}
+}
+
+------------------------------------------------------------------------------------------------------------------------
+{@define developer($name,$email)=
+    {@xml:insert (optional path=/project)<developers></developers>}
+    {@xml:insert (path=/project/developers)
+        <developer>
+            <name>$name</name>
+            <email>$email</email>
+        </developer>
+    }
+}
+------------------------------------------------------------------------------------------------------------------------
+
+Define the scm connections when you project is on github. All you have to specify is the developer github name and the
+project github id.
+
+{@define github($developer,$project)=
+    <scm>
+        <connection>scm:git:git:@github.com:$developer/$project.git</connection>
+        <developerConnection>scm:git:ssh://github.com/$developer/$project.git</developerConnection>
+        <url>https://github.com/$developer/$project/tree/master</url>
+    </scm>
+    <url>https:/github.com/$developer/$project/tree/master</url>
+}
+
+------------------------------------------------------------------------------------------------------------------------
+
+Defines an --add-opens and --add-exports options to the compiler. This may be needed when you use modules and the tests
+need reflective access. If you define the user defined macros MODULE_PREFIX and PACKAGE_PREFIX they will be used in
+front of the $module and $package parameters.
+
+{@define opens($module,$package,...$to)={@options :noUndefault}--add-opens {?MODULE_PREFIX}$module/{?PACKAGE_PREFIX}$package={#if/$to/$to/ALL-UNNAMED}}
+{@define exports($module,$package,...$to)={@options :noUndefault}--add-exports {?MODULE_PREFIX}$module/{?PACKAGE_PREFIX}$package={#if/$to/$to/ALL-UNNAMED}}
+------------------------------------------------------------------------------------------------------------------------

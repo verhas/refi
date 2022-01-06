@@ -1,6 +1,4 @@
-package javax0.selector.tools;
-
-import java.util.Arrays;
+package javax0.refi.selector;
 
 /**
  * <ul>
@@ -12,11 +10,11 @@ import java.util.Arrays;
  * <li>REGEX_MATCH ::= registered regex word '~' '/' regular expression '/'</li>
  * </ul>
  */
-public class SelectorCompiler {
+class SelectorCompiler {
 
     private Lexer lexer;
 
-    public static SelectorNode compile(String expression) {
+    static SelectorNode compile(String expression) {
         final var it = new SelectorCompiler();
         it.lexer = new Lexer(expression);
         final var topNode = it.expression();
@@ -37,10 +35,6 @@ public class SelectorCompiler {
 
     private boolean isSymbol(String s) {
         return lexer.peek().type == Lexeme.Type.SYMBOL && lexer.peek().string.equals(s);
-    }
-
-    private boolean isWord(String... s) {
-        return lexer.peek().type == Lexeme.Type.WORD && Arrays.stream(s).anyMatch(k -> lexer.peek().string.equals(k));
     }
 
     private SelectorNode expression() {

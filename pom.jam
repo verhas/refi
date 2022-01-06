@@ -1,0 +1,117 @@
+{@import pom.jim}
+{@import version.jim}
+{project Refi}
+
+    {properties}
+        {property :project.build.sourceEncoding:UTF-8}
+    {end properties}
+
+    {distributionManagement}
+        {snapshotRepository |ossrh|https://oss.sonatype.org/content/repositories/snapshots}
+        {repository |ossrh|https://oss.sonatype.org/service/local/staging/deploy/maven2/}
+    {end distributionManagement}
+
+    {license|The Apache License, Version 2.0|http://www.apache.org/licenses/LICENSE-2.0.txt}
+    {developer|Peter Verhas|peter@verhas.com}
+    {github :verhas:refi}
+
+{#thinXml
+groupId>com.javax0
+artifactId>refi
+version>{VERSION}
+packaging>jar
+description>Reflection Tools
+dependencies>
+    dependency>
+        groupId>org.mockito
+        artifactId>mockito-all
+        version>1.10.19
+        scope>test
+    dependency>
+        groupId>org.junit.jupiter
+        artifactId>junit-jupiter-api
+        version>5.7.0
+        scope>test
+    dependency>
+        groupId>org.junit.jupiter
+        artifactId>junit-jupiter-engine
+        version>5.7.0
+        scope>test
+    dependency>
+        groupId>com.javax0.jamal
+        artifactId>jamal-core
+        version>{JAMAL_VERSION}
+        scope>test
+    dependency>
+        groupId>com.javax0.jamal
+        artifactId>jamal-engine
+        version>{JAMAL_VERSION}
+        scope>test
+    dependency>
+        groupId>com.javax0.jamal
+        artifactId>jamal-snippet
+        version>{JAMAL_VERSION}
+        scope>test
+
+profiles>profile> {@comment Use this profile to upload a new release to Maven Central using mvn deploy -Prelease}
+    id>release
+    build>plugins>plugin>
+      groupId>org.apache.maven.plugins
+      artifactId>maven-gpg-plugin
+      version>1.6
+      executions>execution>
+          id>sign-artifacts
+          phase>verify
+          goals>goal>sign
+
+build>plugins>
+    plugin>
+        artifactId>maven-surefire-plugin
+        version>3.0.0-M5
+        configuration>argLine>
+            --add-opens refi/javax0.refi.selector=ALL-UNNAMED
+            --add-opens refi/javax0.refi=ALL-UNNAMED
+    plugin>
+        artifactId>maven-source-plugin
+        version>3.2.1
+        executions>execution>
+            id>attach-sources
+            goals>goal>jar
+    plugin>
+        groupId>org.apache.maven.plugins
+        artifactId>maven-javadoc-plugin
+        version>3.2.0
+        executions>execution>
+            id>attach-javadocs
+            goals>goal>jar
+        configuration>
+            detectOfflineLinks>false
+            doclint>none
+            doclet>javax0.jamal.doclet.JamalDoclet
+            docletArtifact>
+                groupId>com.javax0.jamal
+                artifactId>jamal-doclet
+                version>{JAMAL_VERSION}
+            additionalOptions>
+                additionalOption>--source-root
+                additionalOption>{@escape*``${project.build.sourceDirectory}``}
+            taglets>
+                taglet>
+                    tagletClass>javax0.jamal.doclet.JamalTaglet
+                    tagletArtifact>
+                        groupId>com.javax0.jamal
+                        artifactId>jamal-doclet
+                        version>{JAMAL_VERSION}
+                tagletArtifacts>tagletArtifact>
+                    groupId>com.javax0.jamal
+                    artifactId>jamal-snippet
+                    version>{JAMAL_VERSION}
+    plugin>
+        groupId>org.apache.maven.plugins
+        artifactId>maven-compiler-plugin
+        version>3.8.1
+        configuration>
+            encoding>UTF-8
+            release>11
+}
+{end project}

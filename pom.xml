@@ -1,12 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.javax0</groupId>
-    <artifactId>refi</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
     <name>Refi</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,25 +15,17 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-    <description>Reflection Tools</description>
-    <url>https://github.com/verhas/refi/tree/master</url>
-    <licenses>
-        <license>
-            <name>The Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
-    <developers>
-        <developer>
-            <name>Peter Verhas</name>
-            <email>peter@verhas.com</email>
-        </developer>
-    </developers>
     <scm>
-        <connection>scm:git:git@github.com:verhas/refi.git</connection>
+        <connection>scm:git:git:@github.com:verhas/refi.git</connection>
         <developerConnection>scm:git:ssh://github.com/verhas/refi.git</developerConnection>
         <url>https://github.com/verhas/refi/tree/master</url>
     </scm>
+    <url>https:/github.com/verhas/refi/tree/master</url>
+    <groupId>com.javax0</groupId>
+    <artifactId>refi</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <description>Reflection Tools</description>
     <dependencies>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -50,23 +36,38 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.6.2</version>
+            <version>5.7.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.6.0</version>
+            <version>5.7.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.javax0.jamal</groupId>
+            <artifactId>jamal-core</artifactId>
+            <version>1.10.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.javax0.jamal</groupId>
+            <artifactId>jamal-engine</artifactId>
+            <version>1.10.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.javax0.jamal</groupId>
+            <artifactId>jamal-snippet</artifactId>
+            <version>1.10.4</version>
+            <scope>test
+</scope>
         </dependency>
     </dependencies>
     <profiles>
         <profile>
-            <!--
-            Use this profile to upload a new release to Maven Central
-            using mvn deploy -Possrh
-            -->
-            <id>ossrh</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
@@ -78,7 +79,8 @@
                                 <id>sign-artifacts</id>
                                 <phase>verify</phase>
                                 <goals>
-                                    <goal>sign</goal>
+                                    <goal>sign
+</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -91,11 +93,12 @@
         <plugins>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M4</version>
+                <version>3.0.0-M5</version>
                 <configuration>
                     <argLine>
-                        --add-opens javax0.selector/javax0.selector.tools=ALL-UNNAMED
-                    </argLine>
+                    --add-opens refi/javax0.refi.selector=ALL-UNNAMED
+                    --add-opens refi/javax0.refi=ALL-UNNAMED
+                </argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -122,6 +125,37 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <detectOfflineLinks>false</detectOfflineLinks>
+                    <doclint>none</doclint>
+                    <doclet>javax0.jamal.doclet.JamalDoclet</doclet>
+                    <docletArtifact>
+                        <groupId>com.javax0.jamal</groupId>
+                        <artifactId>jamal-doclet</artifactId>
+                        <version>1.10.4</version>
+                    </docletArtifact>
+                    <additionalOptions>
+                        <additionalOption>--source-root</additionalOption>
+                        <additionalOption>${project.build.sourceDirectory}</additionalOption>
+                    </additionalOptions>
+                    <taglets>
+                        <taglet>
+                            <tagletClass>javax0.jamal.doclet.JamalTaglet</tagletClass>
+                            <tagletArtifact>
+                                <groupId>com.javax0.jamal</groupId>
+                                <artifactId>jamal-doclet</artifactId>
+                                <version>1.10.4</version>
+                            </tagletArtifact>
+                        </taglet>
+                        <tagletArtifacts>
+                            <tagletArtifact>
+                                <groupId>com.javax0.jamal</groupId>
+                                <artifactId>jamal-snippet</artifactId>
+                                <version>1.10.4</version>
+                            </tagletArtifact>
+                        </tagletArtifacts>
+                    </taglets>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -134,4 +168,16 @@
             </plugin>
         </plugins>
     </build>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Peter Verhas</name>
+            <email>peter@verhas.com</email>
+        </developer>
+    </developers>
 </project>
