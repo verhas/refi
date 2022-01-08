@@ -1,5 +1,9 @@
 package javax0.refi.selector;
 
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -26,6 +30,9 @@ public class SutTargetClass {
     @interface Z {
     }
 
+    HashMap<Map<String, Integer>, Boolean> wuzz(Set<Set<Set<BigInteger>>> noBiggie, String name,SutTargetClass ...me) {
+        return null;
+    }
 
     public boolean equals(Object other) {
         return true;
@@ -57,6 +64,7 @@ public class SutTargetClass {
 
     public void method_public() {
     }
+
     final void method_final() {
     }
 

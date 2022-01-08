@@ -14,7 +14,18 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
-public class MethodSignatureFatory {
+/**
+ * This class is used to create a method signature from a method.
+ * The signature of the method is a string representation of the method with the following format:
+ *
+ * <ul>
+ *     <li>return type</li>
+ *     <li>name of the method</li>
+ *     <li>parameter types and names comma and space separated</li>
+ *     <li>throws clause if there are declared exceptions the method throws</li>
+ * </ul>
+ */
+public class MethodSignatureFactory {
 
     public String signature(Method method) {
         final var types = method.getGenericParameterTypes();
@@ -31,7 +42,7 @@ public class MethodSignatureFatory {
         }
         var arglist = sb.toString();
         var exceptionlist = Arrays.stream(method.getGenericExceptionTypes())
-            .map(MethodSignatureFatory::getGenericTypeName)
+            .map(MethodSignatureFactory::getGenericTypeName)
             .collect(Collectors.joining(","));
         final var modifiers = modifiersString(method);
         return modifiers +
@@ -46,7 +57,7 @@ public class MethodSignatureFatory {
 
     private String getVarArg(Type t) {
         final var normType = getGenericTypeName(t);
-        final String actualType = normType.substring(0, normType.length() - 2) + "... ";
+        final String actualType = normType.substring(0, normType.length() - 2) + "...";
         return actualType + " arg" + argCounter.addAndGet(1);
     }
 
@@ -119,7 +130,7 @@ public class MethodSignatureFatory {
 
     private static String getGenericParametersString(Class<?> t) {
         final var generics = Arrays.stream(t.getTypeParameters())
-            .map(MethodSignatureFatory::getGenericTypeName)
+            .map(MethodSignatureFactory::getGenericTypeName)
             .collect(Collectors.joining(","));
         if (generics.length() == 0) {
             return "";
@@ -164,7 +175,7 @@ public class MethodSignatureFatory {
      */
     private static String joinTypes(Type[] types) {
         return Arrays.stream(types)
-            .map(MethodSignatureFatory::getGenericTypeName)
+            .map(MethodSignatureFactory::getGenericTypeName)
             .collect(Collectors.joining(","));
     }
 
