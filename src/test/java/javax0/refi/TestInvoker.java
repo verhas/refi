@@ -11,9 +11,14 @@ public class TestInvoker {
     }
 
     @Test
-    void testInvoker() {
+    void testInvoker1() {
         Assumptions.assumeFalse(called);
         Invoker.call("wuff").on(this).types().args();
+        Assertions.assertTrue(called);
+    }    @Test
+    void testInvoker2() {
+        Assumptions.assumeFalse(called);
+        Invoker.call("wuff").on(this).args();
         Assertions.assertTrue(called);
     }
 }
