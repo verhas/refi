@@ -23,7 +23,7 @@
     <url>https:/github.com/verhas/refi/tree/master</url>
     <groupId>com.javax0</groupId>
     <artifactId>refi</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <description>Reflection Tools</description>
     <dependencies>

@@ -79,8 +79,8 @@ public class Utilities {
          */
         public static Optional<Method> get(Class<?> klass, String methodName, Class<?>... classes) {
             if (classes.length == 0) {
-                return getAll(klass.getSuperclass()).filter(method -> method.getName().equals(methodName) && method.getParameterTypes().length == 0 ).findFirst()
-                    .or( () -> getAll(klass.getSuperclass()).filter(method -> method.getName().equals(methodName)).collect(toSingleton()));
+                return getAll(klass).filter(method -> method.getName().equals(methodName) && method.getParameterTypes().length == 0 ).findFirst()
+                    .or( () -> getAll(klass).filter(method -> method.getName().equals(methodName)).collect(toSingleton()));
             } else {
                 return getAll(klass)
                     .filter(method -> method.getName().equals(methodName) && Arrays.deepEquals(method.getParameterTypes(), classes))
@@ -92,7 +92,7 @@ public class Utilities {
             return Collectors.collectingAndThen(
                 Collectors.toList(),
                 list -> {
-                    if (list.size() > 1) {
+                    if (list.size() != 1) {
                         return Optional.empty();
                     }
                     return Optional.of(list.get(0));
