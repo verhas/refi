@@ -55,14 +55,28 @@ dependencies>
 
 profiles>profile> {@comment Use this profile to upload a new release to Maven Central using mvn deploy -Prelease}
     id>release
-    build>plugins>plugin>
-      groupId>org.apache.maven.plugins
-      artifactId>maven-gpg-plugin
-      version>1.6
-      executions>execution>
-          id>sign-artifacts
-          phase>verify
-          goals>goal>sign
+    build>plugins>
+      plugin>
+        groupId>org.apache.maven.plugins
+        artifactId>maven-gpg-plugin
+        version>1.6
+        executions>execution>
+            id>sign-artifacts
+            phase>verify
+            goals>goal>sign
+      plugin>
+        groupId>org.sonatype.plugins
+        artifactId>nexus-staging-maven-plugin
+        version>1.6.8
+        extensions>true
+        configuration>
+           serverId>ossrh
+           nexusUrl>https://oss.sonatype.org/
+           autoReleaseAfterClose>true
+        dependencies>dependency>
+           groupId>com.thoughtworks.xstream
+           artifactId>xstream
+           version>1.4.15
 
 build>plugins>
     plugin>
