@@ -38,7 +38,7 @@ public class Selector<T> {
      */
     private final String expression;
 
-    private Selector(String expression) {
+    protected Selector(String expression) {
         this.expression = expression;
 
         defineConversions();
