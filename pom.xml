@@ -23,7 +23,7 @@
     <url>https:/github.com/verhas/refi/tree/master</url>
     <groupId>com.javax0</groupId>
     <artifactId>refi</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>Reflection Tools</description>
     <dependencies>
@@ -116,6 +116,7 @@
                     <argLine>
                     --add-opens refi/javax0.refi.selector=ALL-UNNAMED
                     --add-opens refi/javax0.refi=ALL-UNNAMED
+                    @{surefire.jacoco.args}
                 </argLine>
                 </configuration>
             </plugin>
@@ -183,6 +184,38 @@
                     <encoding>UTF-8</encoding>
                     <release>11</release>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.7</version>
+                <configuration>
+                    <output>file</output>
+                    <destFile>${project.build.directory}/jacoco.exec</destFile>
+                    <append>true</append>
+                    <propertyName>surefire.jacoco.args</propertyName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <propertyName>surefire.jacoco.args</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/jacoco.exec.</dataFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

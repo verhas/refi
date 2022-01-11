@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="203 -1061 659 400" width="659" height="400">
+  <defs/>
+  <metadata> Produced by OmniGraffle 7.19.2\n2022-01-11 14:24:11 +0000</metadata>
+  <g id="Canvas_2" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none" fill-opacity="1">
+    <title>Canvas 2</title>
+    <g id="Canvas_2_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_2">
+        <path d="M 761.6023 -998.8857 C 888.1328 -922.7335 888.1328 -799.2665 761.6023 -723.1143 C 635.0726 -646.96176 429.92743 -646.96176 303.39766 -723.1143 C 176.86723 -799.2665 176.86723 -922.7335 303.39766 -998.8857 C 429.92743 -1075.0382 635.0726 -1075.0382 761.6023 -998.8857" fill="white"/>
+        <path d="M 761.6023 -998.8857 C 888.1328 -922.7335 888.1328 -799.2665 761.6023 -723.1143 C 635.0726 -646.96176 429.92743 -646.96176 303.39766 -723.1143 C 176.86723 -799.2665 176.86723 -922.7335 303.39766 -998.8857 C 429.92743 -1075.0382 635.0726 -1075.0382 761.6023 -998.8857" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      </g>
+      <g id="Graphic_3">
+        <ellipse cx="532.5" cy="-781" rx="126.50020213459" ry="66.0001054615251" fill="white"/>
+        <ellipse cx="532.5" cy="-781" rx="126.50020213459" ry="66.0001054615251" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      </g>
+      <g id="Graphic_4">
+        <ellipse cx="466" cy="-775" rx="13.0000207727246" ry="21.0000335559397" fill="white"/>
+        <ellipse cx="466" cy="-775" rx="13.0000207727246" ry="21.0000335559397" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      </g>
+      <g id="Graphic_5">
+        <circle cx="391" cy="-972" r="11.0000175769208" fill="white"/>
+        <circle cx="391" cy="-972" r="11.0000175769208" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      </g>
+      <g id="Graphic_6">
+        <ellipse cx="599" cy="-775" rx="13.0000207727247" ry="21.0000335559397" fill="white"/>
+        <ellipse cx="599" cy="-775" rx="13.0000207727247" ry="21.0000335559397" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      </g>
+      <g id="Graphic_7">
+        <circle cx="674" cy="-972" r="11.0000175769207" fill="white"/>
+        <circle cx="674" cy="-972" r="11.0000175769207" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="10"/>
+      </g>
+    </g>
+  </g>
+</svg>

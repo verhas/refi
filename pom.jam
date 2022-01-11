@@ -85,6 +85,7 @@ build>plugins>
         configuration>argLine>
             --add-opens refi/javax0.refi.selector=ALL-UNNAMED
             --add-opens refi/javax0.refi=ALL-UNNAMED
+            {@escape*``@{surefire.jacoco.args}``}
     plugin>
         artifactId>maven-source-plugin
         version>3.2.1
@@ -127,5 +128,24 @@ build>plugins>
         configuration>
             encoding>UTF-8
             release>11
+    plugin>
+        groupId>org.jacoco
+        artifactId>jacoco-maven-plugin
+        version>0.8.7
+        configuration>
+            output>file
+            destFile>{@escape*``${project.build.directory}``}/jacoco.exec
+            append>true
+            propertyName>surefire.jacoco.args
+        executions>
+            execution>
+                id>prepare-agent
+                goals>goal>prepare-agent
+                configuration>propertyName>surefire.jacoco.args
+            execution>
+                id>report
+                phase>prepare-package
+                goals>goal>report
+                configuration>dataFile>{@escape*``${project.build.directory}``}/jacoco.exec.
 }
 {end project}

@@ -1,3 +1,6 @@
+
+image::images/refi.svg[width=111]
+
 = REFI, Some Reflection Tools
 {%@snip:collect from="src/main/java"%}\
 {%@snip:collect from="src/test/java"%}\
