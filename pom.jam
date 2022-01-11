@@ -127,7 +127,7 @@ build>plugins>
         version>3.8.1
         configuration>
             encoding>UTF-8
-            release>11
+            release>{JAVA_RELEASE}
     plugin>
         groupId>org.jacoco
         artifactId>jacoco-maven-plugin
